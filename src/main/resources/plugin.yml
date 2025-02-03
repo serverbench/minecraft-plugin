@@ -1,0 +1,9 @@
+name: serverbench-beta
+version: 1.0.0
+main: io.serverbench.client.spigot.Main
+author: serverbench
+api-version: 1.21
+softdepend:
+  - Votifier
+  - AFKPlus
+  - Essentials

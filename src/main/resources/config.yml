@@ -1,0 +1,13 @@
+# get your key on console.serverbench.io
+key: "your_key_here"
+
+# your server name, if it doesn't exist on your serverbench panel, it will be automatically created
+name: "your_server_name"
+
+# [optional] if you run multiple servers of the same type, you can identify it here,
+# else, leave as 'null' (no quotes)
+instance: null # example: "blue_world"
+
+# extra settings - do not touch if you don't know what you are doing
+endpoint: wss://stream.beta.serverbench.io
+disable_bungee: false
