@@ -57,6 +57,9 @@ public class Main extends Plugin {
             getLogger().severe("serverbench was unable to start: "+e.getMessage());
         }
         getProxy().getPluginManager().registerListener(this, new JoinListener(this));
+        if(getProxy().getPluginManager().getPlugin("NuVotifier")!=null){
+            getProxy().getPluginManager().registerListener(this, new VoteListener(this));
+        }
         getProxy().registerChannel("serverbench:connection");
     }
 

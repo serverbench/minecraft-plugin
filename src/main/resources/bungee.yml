@@ -2,3 +2,5 @@ name: serverbench-beta
 version: 1.0.0
 main: io.serverbench.client.bungee.Main
 author: serverbench
+softDepends:
+  - NuVotifier

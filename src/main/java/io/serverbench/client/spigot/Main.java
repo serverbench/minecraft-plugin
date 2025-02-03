@@ -60,6 +60,9 @@ public class Main extends JavaPlugin {
                 this,
                 idleProvider
         ), this);
+        if(getServer().getPluginManager().getPlugin("Votifier")!=null){
+            getServer().getPluginManager().registerEvents(new VoteListener(this), this);
+        }
 
         // initialization
         if(getConfig().get("key") == null || getConfig().get("name") == null) {
