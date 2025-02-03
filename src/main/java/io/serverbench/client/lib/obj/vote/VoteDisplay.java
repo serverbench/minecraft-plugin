@@ -2,10 +2,12 @@ package io.serverbench.client.lib.obj.vote;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.serverbench.client.lib.Client;
 import io.serverbench.client.lib.obj.Member;
 import io.serverbench.client.lib.obj.vote.listingSite.ListingSiteDisplay;
 
 import javax.annotation.Nullable;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,12 +16,12 @@ public class VoteDisplay {
 
     public final Member member;
     public final List<ListingSiteDisplay> sites;
-    public final @Nullable Long primaryCompleted;
-    public final @Nullable Long primaryNext;
-    public final @Nullable Long secondaryCompleted;
-    public final @Nullable Long secondaryNext;
+    public final @Nullable Instant primaryCompleted;
+    public final @Nullable Instant primaryNext;
+    public final @Nullable Instant secondaryCompleted;
+    public final @Nullable Instant secondaryNext;
 
-    VoteDisplay(Member member, List<ListingSiteDisplay> sites, @Nullable Long primaryCompleted, @Nullable Long primaryNext, @Nullable Long secondaryCompleted, @Nullable Long secondaryNext){
+    VoteDisplay(Member member, List<ListingSiteDisplay> sites, @Nullable Instant primaryCompleted, @Nullable Instant primaryNext, @Nullable Instant secondaryCompleted, @Nullable Instant secondaryNext){
         this.member = member;
         this.sites = sites;
         this.primaryCompleted = primaryCompleted;
@@ -36,10 +38,17 @@ public class VoteDisplay {
                     element.getAsJsonObject()
             ));
         }
-        this.primaryCompleted = object.get("primaryCompleted").isJsonNull() ? null : object.get("primaryCompleted").getAsLong();
-        this.primaryNext = object.get("primaryNext").isJsonNull() ? null : object.get("primaryNext").getAsLong();
-        this.secondaryCompleted = object.get("secondaryCompleted").isJsonNull() ? null : object.get("secondaryCompleted").getAsLong();
-        this.secondaryNext = object.get("secondaryNext").isJsonNull() ? null : object.get("secondaryNext").getAsLong();
+        this.primaryCompleted = Client.parseDate(object.get("primaryCompleted"));
+        this.primaryNext = Client.parseDate(object.get("primaryNext"));
+        this.secondaryCompleted = Client.parseDate(object.get("secondaryCompleted"));
+        this.secondaryNext = Client.parseDate(object.get("secondaryNext"));
+    }
+
+    public boolean hasVoterStatus(){
+        if(this.primaryNext==null){
+            return false;
+        }
+        return this.primaryNext.toEpochMilli()>System.currentTimeMillis();
     }
 
 }

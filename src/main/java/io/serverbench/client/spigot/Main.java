@@ -77,6 +77,7 @@ public class Main extends JavaPlugin {
                                 }
                             }),
                             (voters) -> {
+                                getLogger().info("bukkit-side received voter status " + voters.size());
                               for (VoteDisplay vote : voters) {
                                   getLogger().info("received voter status " + vote.member.name);
                               }

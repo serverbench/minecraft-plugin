@@ -13,7 +13,7 @@ public class ListingSiteSetup {
     }
 
     ListingSiteSetup(JsonObject object) {
-        this.site = new ListingSite(object);
+        this.site = new ListingSite(object.get("site").getAsJsonObject());
         this.url = object.get("url").getAsString();
     }
 

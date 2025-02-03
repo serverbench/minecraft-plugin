@@ -15,6 +15,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -113,12 +114,13 @@ public class Client {
             logger.info("Processing " + arr.size() + " voters");
             List<VoteDisplay> displays = new ArrayList<>();
             for (JsonElement elem : arr) {
-                displays.add(new VoteDisplay(
-                    elem.getAsJsonObject()
-                ));
+                VoteDisplay voteDisplay = new VoteDisplay(
+                        elem.getAsJsonObject()
+                );
+                displays.add(voteDisplay);
             }
             this.eventHandler.voteDisplay().accept(displays);
-        });
+        }).capture(e -> e.printStackTrace());
     }
 
     private void connectWebSocket() {
@@ -204,6 +206,17 @@ public class Client {
         } finally {
             wsLock.unlock();
         }
+    }
+
+    public static Instant parseDate(JsonElement element){
+        if(element.isJsonNull()){
+            return null;
+        } else if (element.getAsJsonPrimitive().isNumber()){
+            return Instant.ofEpochMilli(element.getAsJsonPrimitive().getAsLong());
+        } else if (element.getAsJsonPrimitive().isString()){
+            return Instant.parse(element.getAsString());
+        }
+        return null;
     }
 
     private void handleUnrequestedEvent(JsonObject obj) throws NotReadyException {
