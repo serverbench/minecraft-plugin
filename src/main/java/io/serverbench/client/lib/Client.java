@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import io.serverbench.client.lib.id.ExactIdentifiers;
 import io.serverbench.client.lib.id.FriendlyIdentifiers;
 import io.serverbench.client.lib.obj.Command;
+import io.serverbench.client.lib.obj.vote.VoteDisplay;
+import io.serverbench.client.lib.obj.vote.listingSite.ListingSiteDisplay;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
@@ -105,6 +107,20 @@ public class Client {
         });
     }
 
+    private void requestVoters() throws NotReadyException {
+        Client.instance.session("voters").send().then((o) -> {
+            JsonArray arr = o.getAsJsonArray();
+            logger.info("Processing " + arr.size() + " voters");
+            List<VoteDisplay> displays = new ArrayList<>();
+            for (JsonElement elem : arr) {
+                displays.add(new VoteDisplay(
+                    elem.getAsJsonObject()
+                ));
+            }
+            this.eventHandler.voteDisplay().accept(displays);
+        });
+    }
+
     private void connectWebSocket() {
         if(this.ws!=null) return;
         wsLock.lock();
@@ -142,6 +158,7 @@ public class Client {
                                 eventHandler.open().run();
                                 try {
                                     requestCommands();
+                                    requestVoters();
                                 } catch (NotReadyException e) {
                                     logger.warning("Error while request commands");
                                 }
@@ -196,6 +213,8 @@ public class Client {
             case "session":
                 if ("cmd".equals(action)) {
                     requestCommands();
+                } else if ("voters".equals(action)) {
+                    requestVoters();
                 }
                 break;
             case "instance":

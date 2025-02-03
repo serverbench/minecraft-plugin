@@ -5,6 +5,8 @@ import io.serverbench.client.common.IdleProvider;
 import io.serverbench.client.lib.Client;
 import io.serverbench.client.lib.EventHandler;
 import io.serverbench.client.lib.obj.Command;
+import io.serverbench.client.lib.obj.vote.Vote;
+import io.serverbench.client.lib.obj.vote.VoteDisplay;
 import io.serverbench.client.spigot.idleProvider.AfkPlusIdleProvider;
 import io.serverbench.client.spigot.idleProvider.EssentialsIdleProvider;
 import org.bukkit.Bukkit;
@@ -71,6 +73,11 @@ public class Main extends JavaPlugin {
                                     getServer().dispatchCommand(getServer().getConsoleSender(), cmd.cmd);
                                 }
                             }),
+                            (voters) -> {
+                              for (VoteDisplay vote : voters) {
+                                  getLogger().info("received voter status " + vote.member.name);
+                              }
+                            },
                             () -> {
                                 // the client reconnected, reconnect stray players
                                 strayWorkerSpigot.run();

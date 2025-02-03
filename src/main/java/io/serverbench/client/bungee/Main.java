@@ -41,6 +41,9 @@ public class Main extends Plugin {
                                     getProxy().getPluginManager().dispatchCommand(getProxy().getConsole(), cmd.cmd);
                                 }
                             },
+                            (voters) -> {
+
+                            },
                             () -> { },
                             () -> { }
                         ),
