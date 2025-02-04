@@ -2,13 +2,15 @@ package io.serverbench.client.spigot;
 
 import io.serverbench.client.common.ConnectionManager;
 import io.serverbench.client.common.IdleProvider;
+import io.serverbench.client.common.VoteManager;
 import io.serverbench.client.lib.Client;
 import io.serverbench.client.lib.EventHandler;
+import io.serverbench.client.lib.NotReadyException;
 import io.serverbench.client.lib.obj.Command;
-import io.serverbench.client.lib.obj.vote.Vote;
 import io.serverbench.client.lib.obj.vote.VoteDisplay;
 import io.serverbench.client.spigot.idleProvider.AfkPlusIdleProvider;
 import io.serverbench.client.spigot.idleProvider.EssentialsIdleProvider;
+import io.serverbench.client.spigot.placeholderProvider.PapiProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -46,7 +48,18 @@ public class Main extends JavaPlugin {
             }
         }
 
-        // stray worker
+        // placeholder providers
+        if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            getLogger().info("hooked into PlaceholderAPI");
+            new PapiProvider().register();
+        }
+
+        // session event input
+        getServer().getPluginManager().registerEvents(new ConnectionListener(
+                isSlave,
+                this,
+                idleProvider
+        ), this);
         StrayWorkerSpigot strayWorkerSpigot = new StrayWorkerSpigot(
                 isSlave,
                 messaging,
@@ -54,15 +67,17 @@ public class Main extends JavaPlugin {
         );
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, strayWorkerSpigot, 0, 20*5);
 
-        // event input
-        getServer().getPluginManager().registerEvents(new ConnectionListener(
-                isSlave,
-                this,
-                idleProvider
-        ), this);
+        // voting event input
         if(getServer().getPluginManager().getPlugin("Votifier")!=null){
             getServer().getPluginManager().registerEvents(new VoteListener(this), this);
         }
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, ()->{
+            try {
+                VoteManager.getInstance().requestCacheIfDue();
+            } catch (NotReadyException e) {
+                getLogger().warning("unable to update voter cache: "+e.getMessage());
+            }
+        }, 0, 20L*60);
 
         // initialization
         if(getConfig().get("key") == null || getConfig().get("name") == null) {
@@ -77,10 +92,7 @@ public class Main extends JavaPlugin {
                                 }
                             }),
                             (voters) -> {
-                                getLogger().info("bukkit-side received voter status " + voters.size());
-                              for (VoteDisplay vote : voters) {
-                                  getLogger().info("received voter status " + vote.member.name);
-                              }
+                                VoteManager.getInstance().refreshCache(voters);
                             },
                             () -> {
                                 // the client reconnected, reconnect stray players
@@ -90,6 +102,7 @@ public class Main extends JavaPlugin {
                                 // the client disconnected, which means we should close all the active connections,
                                 // as they should have been closed by serverbench upon disconnecting the client
                                 ConnectionManager.getInstance().clearConnections();
+                                VoteManager.getInstance().clearVotes();
                             }
                     ),
                     getLogger(),

@@ -108,7 +108,7 @@ public class Client {
         });
     }
 
-    private void requestVoters() throws NotReadyException {
+    public void requestVoters() throws NotReadyException {
         Client.instance.session("voters").send().then((o) -> {
             JsonArray arr = o.getAsJsonArray();
             logger.info("Processing " + arr.size() + " voters");
