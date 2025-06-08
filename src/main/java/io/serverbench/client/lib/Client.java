@@ -89,8 +89,17 @@ public class Client {
         return new Action("community."+(exactIdentifiers != null ? exactIdentifiers.communityId() : '?')+"."+action, exactIdentifiers==null);
     }
 
+    private static String getEnvOrDefault(String envKey, String defaultValue) {
+        String val = System.getenv(envKey);
+        return (val != null && !val.trim().isEmpty()) ? val : defaultValue;
+    }
+
     public static void initialize(@Nonnull String endpoint, @Nonnull EventHandler eventHandler, @Nonnull Logger logger, @Nonnull String key, @Nonnull String name, @Nullable String instance) {
-        Client.instance = new Client(endpoint, new FriendlyIdentifiers(key, name, instance), eventHandler, logger);
+        Client.instance = new Client(endpoint, new FriendlyIdentifiers(
+                getEnvOrDefault("SERVERBENCH_SK", key),
+                getEnvOrDefault("SERVERBENCH_SERVER", name),
+                getEnvOrDefault("SERVERBENCH_INSTANCE", instance)
+        ), eventHandler, logger);
         Client.instance.expectClosed = false;
         Client.instance.connectWebSocket();
     }
