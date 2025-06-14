@@ -11,6 +11,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -49,7 +50,7 @@ public class ChatListener implements Listener {
     }
 
     @EventHandler
-    public void onDisconnect(PlayerDisconnectEvent event) {
+    public void onDisconnect(PlayerQuitEvent event) {
         this.lastChatterIds.remove(event.getPlayer().getUniqueId());
         Set<UUID> strayStarters = new HashSet<>();
         for (UUID starter : this.lastChatterIds.keySet()) {
