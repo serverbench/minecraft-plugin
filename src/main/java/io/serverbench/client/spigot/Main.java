@@ -67,7 +67,7 @@ public class Main extends JavaPlugin {
         );
         // chat events
         getServer().getPluginManager().registerEvents(new ChatListener(
-                this.getLogger()
+                this
         ), this);
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, strayWorkerSpigot, 0, 20*5);
 

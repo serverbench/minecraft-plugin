@@ -15,19 +15,22 @@ import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
 
 import java.util.*;
 import java.util.logging.Logger;
 
 public class ChatListener implements Listener {
 
+    Plugin plugin;
     Logger logger;
     HashMap<UUID, UUID> lastChatterIds = new HashMap<>();
     Set<String> dmCommands = new HashSet<>();
     Set<String> replyCommands = new HashSet<>();
 
-    ChatListener(Logger logger) {
-        this.logger = logger;
+    ChatListener(Plugin plugin) {
+        this.logger = plugin.getLogger();
+        this.plugin = plugin;
         dmCommands.add("msg");
         dmCommands.add("tell");
         dmCommands.add("w");
@@ -66,15 +69,16 @@ public class ChatListener implements Listener {
 
         if (!oldName.equals(newName)) {
             Player player = (Player) event.getWhoClicked();
-            // Optional: check for left click or shift-click
-            Client.getInstance().session("chat.send")
-                    .addArg("fromEid", player.getUniqueId().toString())
-                    .addArg("message", newName)
-                    .addArg("channel", "rename")
-                    .capture((e) -> {
-                        logger.warning("item rename not forwarded: " + e.getMessage());
-                    })
-                    .send();
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                Client.getInstance().session("chat.send")
+                        .addArg("fromEid", player.getUniqueId().toString())
+                        .addArg("message", newName)
+                        .addArg("channel", "rename")
+                        .capture((e) -> {
+                            logger.warning("item rename not forwarded: " + e.getMessage());
+                        })
+                        .send();
+            });
         }
     }
 
@@ -86,14 +90,16 @@ public class ChatListener implements Listener {
         String content = String.join("\n", pages);
 
         if (!oldContent.equals(content)) {
-            Client.getInstance().session("chat.send")
-                .addArg("fromEid", event.getPlayer().getUniqueId().toString())
-                .addArg("message", content)
-                .addArg("channel", "book")
-                .capture((e) -> {
-                    logger.warning("book write not forwarded: " + e.getMessage());
-                })
-                .send();
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                Client.getInstance().session("chat.send")
+                        .addArg("fromEid", event.getPlayer().getUniqueId().toString())
+                        .addArg("message", content)
+                        .addArg("channel", "book")
+                        .capture((e) -> {
+                            logger.warning("book write not forwarded: " + e.getMessage());
+                        })
+                        .send();
+            });
         }
     }
 
@@ -135,14 +141,18 @@ public class ChatListener implements Listener {
                 }
             }
             if (receiver != null ) {
-                Client.getInstance().session("chat.send")
-                    .addArg("fromEid", sender.toString())
-                    .addArg("toEid", receiver.toString())
-                    .addArg("message", content)
-                    .capture((e) -> {
-                        logger.warning("chat message not forwarded: "+e.getMessage());
-                    })
-                    .send();
+                UUID finalReceiver = receiver;
+                String finalContent = content;
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    Client.getInstance().session("chat.send")
+                            .addArg("fromEid", sender.toString())
+                            .addArg("toEid", finalReceiver.toString())
+                            .addArg("message", finalContent)
+                            .capture((e) -> {
+                                logger.warning("chat message not forwarded: " + e.getMessage());
+                            })
+                            .send();
+                });
             }
         }
     }
