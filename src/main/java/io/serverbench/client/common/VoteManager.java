@@ -5,6 +5,7 @@ import io.serverbench.client.lib.Action;
 import io.serverbench.client.lib.Client;
 import io.serverbench.client.lib.NotReadyException;
 import io.serverbench.client.lib.obj.vote.VoteDisplay;
+import io.serverbench.client.lib.obj.vote.VoterStatus;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class VoteManager {
 
-    private final ConcurrentHashMap<UUID, VoteDisplay> votes;
+    private final ConcurrentHashMap<UUID, VoterStatus> votes;
 
     private VoteManager() {
         votes = new ConcurrentHashMap<>();
@@ -32,12 +33,12 @@ public class VoteManager {
         votes.clear();
     }
 
-    public void refreshCache(List<VoteDisplay> displays) {
+    public void refreshCache(List<VoterStatus> displays) {
         this.clearVotes();
-        for(VoteDisplay display : displays) {
+        for(VoterStatus status : displays) {
             votes.put(
-                    UUID.fromString(display.member.eid),
-                    display
+                    UUID.fromString(status.member.eid),
+                    status
             );
         }
     }

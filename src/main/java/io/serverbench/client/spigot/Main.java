@@ -65,6 +65,10 @@ public class Main extends JavaPlugin {
                 messaging,
                 idleProvider
         );
+        // chat events
+        getServer().getPluginManager().registerEvents(new ChatListener(
+                this.getLogger()
+        ), this);
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, strayWorkerSpigot, 0, 20*5);
 
         // voting event input

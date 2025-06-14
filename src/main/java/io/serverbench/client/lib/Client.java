@@ -7,6 +7,7 @@ import io.serverbench.client.lib.id.ExactIdentifiers;
 import io.serverbench.client.lib.id.FriendlyIdentifiers;
 import io.serverbench.client.lib.obj.Command;
 import io.serverbench.client.lib.obj.vote.VoteDisplay;
+import io.serverbench.client.lib.obj.vote.VoterStatus;
 import io.serverbench.client.lib.obj.vote.listingSite.ListingSiteDisplay;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -121,14 +122,14 @@ public class Client {
         Client.instance.session("voters").send().then((o) -> {
             JsonArray arr = o.getAsJsonArray();
             logger.info("Processing " + arr.size() + " voters");
-            List<VoteDisplay> displays = new ArrayList<>();
+            List<VoterStatus> statuses = new ArrayList<>();
             for (JsonElement elem : arr) {
-                VoteDisplay voteDisplay = new VoteDisplay(
+                VoterStatus voterStatus = new VoterStatus(
                         elem.getAsJsonObject()
                 );
-                displays.add(voteDisplay);
+                statuses.add(voterStatus);
             }
-            this.eventHandler.voteDisplay().accept(displays);
+            this.eventHandler.voteDisplay().accept(statuses);
         }).capture(e -> e.printStackTrace());
     }
 
