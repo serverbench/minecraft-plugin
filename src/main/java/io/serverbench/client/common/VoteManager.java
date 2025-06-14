@@ -48,7 +48,7 @@ public class VoteManager {
     }
 
     public void requestCacheIfDue() throws NotReadyException {
-        for(VoteDisplay display : votes.values()){
+        for(VoterStatus display : votes.values()){
             if(display.shouldBeRefreshed()){
                 Client.getInstance().requestVoters();
                 return;
