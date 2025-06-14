@@ -1,14 +1,13 @@
 package io.serverbench.client.spigot;
 
-import io.serverbench.client.common.strayWorker.ConnectedMember;
 import io.serverbench.client.lib.Client;
+import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
@@ -48,6 +47,21 @@ public class ChatListener implements Listener {
             })
             .send();
     }
+
+    @EventHandler
+    public void onDisconnect(PlayerDisconnectEvent event) {
+        this.lastChatterIds.remove(event.getPlayer().getUniqueId());
+        Set<UUID> strayStarters = new HashSet<>();
+        for (UUID starter : this.lastChatterIds.keySet()) {
+            if (this.lastChatterIds.get(starter).equals(event.getPlayer().getUniqueId())) {
+                strayStarters.add(starter);
+            }
+        }
+        for (UUID starter : strayStarters) {
+            this.lastChatterIds.remove(starter);
+        }
+    }
+
     @EventHandler
     public void onAnvilRename(InventoryClickEvent event) {
         if (!(event.getInventory() instanceof AnvilInventory)) return;
