@@ -1,14 +1,14 @@
 package io.serverbench.client.lib;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.serverbench.client.lib.id.ExactIdentifiers;
 import io.serverbench.client.lib.id.FriendlyIdentifiers;
 import io.serverbench.client.lib.obj.Command;
-import io.serverbench.client.lib.obj.vote.VoteDisplay;
 import io.serverbench.client.lib.obj.vote.VoterStatus;
-import io.serverbench.client.lib.obj.vote.listingSite.ListingSiteDisplay;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
@@ -39,6 +39,7 @@ public class Client {
     private final String endpoint;
     private final ScheduledExecutorService reconnectScheduler = Executors.newSingleThreadScheduledExecutor();
     private final ReentrantLock wsLock = new ReentrantLock();
+    private final Cache<String, Boolean> cmdCache;
 
     private Map<String, Action> actions = new HashMap<>();
 
@@ -47,6 +48,10 @@ public class Client {
         this.friendlyIdentifiers = friendlyIdentifiers;
         this.eventHandler = eventHandler;
         this.logger = logger;
+        this.cmdCache = Caffeine.newBuilder()
+                .maximumSize(1000)
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .build();
     }
 
     public static Client getInstance() {
@@ -112,7 +117,12 @@ public class Client {
             List<Command> commands = new ArrayList<>();
             for (JsonElement elem : arr) {
                 JsonObject cmd = elem.getAsJsonObject();
-                commands.add(new Command(cmd.get("id").getAsString(), cmd.get("cmd").getAsString()));
+                Command command = new Command(cmd.get("id").getAsString(), cmd.get("cmd").getAsString());
+                if (cmdCache.get(command.id, (k) -> false)) {
+                    continue;
+                }
+                cmdCache.put(command.id, true);
+                commands.add(command);
             }
             eventHandler.cmd().accept(commands);
         });
