@@ -1,7 +1,7 @@
 package io.serverbench.client.spigot;
 
+import com.cjcrafter.foliascheduler.ServerImplementation;
 import io.serverbench.client.lib.Client;
-import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,8 +27,9 @@ public class ChatListener implements Listener {
     HashMap<UUID, UUID> lastChatterIds = new HashMap<>();
     Set<String> dmCommands = new HashSet<>();
     Set<String> replyCommands = new HashSet<>();
+    ServerImplementation serverImpl;
 
-    ChatListener(Plugin plugin) {
+    ChatListener(Plugin plugin, ServerImplementation serverImpl) {
         this.logger = plugin.getLogger();
         this.plugin = plugin;
         dmCommands.add("msg");
@@ -36,6 +37,7 @@ public class ChatListener implements Listener {
         dmCommands.add("w");
         replyCommands.add("r");
         replyCommands.add("reply");
+        this.serverImpl = serverImpl;
     }
 
     @EventHandler
@@ -84,16 +86,14 @@ public class ChatListener implements Listener {
 
         if (!oldName.equals(newName)) {
             Player player = (Player) event.getWhoClicked();
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                Client.getInstance().session("chat.send")
-                        .addArg("fromEid", player.getUniqueId().toString())
-                        .addArg("message", newName)
-                        .addArg("channel", "rename")
-                        .capture((e) -> {
-                            logger.warning("item rename not forwarded: " + e.getMessage());
-                        })
-                        .send();
-            });
+            serverImpl.async().runNow(() -> Client.getInstance().session("chat.send")
+                    .addArg("fromEid", player.getUniqueId().toString())
+                    .addArg("message", newName)
+                    .addArg("channel", "rename")
+                    .capture((e) -> {
+                        logger.warning("item rename not forwarded: " + e.getMessage());
+                    })
+                    .send());
         }
     }
 
@@ -105,16 +105,14 @@ public class ChatListener implements Listener {
         String content = String.join("\n", pages);
 
         if (!oldContent.equals(content)) {
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                Client.getInstance().session("chat.send")
-                        .addArg("fromEid", event.getPlayer().getUniqueId().toString())
-                        .addArg("message", content)
-                        .addArg("channel", "book")
-                        .capture((e) -> {
-                            logger.warning("book write not forwarded: " + e.getMessage());
-                        })
-                        .send();
-            });
+            serverImpl.async().runNow(() -> Client.getInstance().session("chat.send")
+                    .addArg("fromEid", event.getPlayer().getUniqueId().toString())
+                    .addArg("message", content)
+                    .addArg("channel", "book")
+                    .capture((e) -> {
+                        logger.warning("book write not forwarded: " + e.getMessage());
+                    })
+                    .send());
         }
     }
 
@@ -158,16 +156,14 @@ public class ChatListener implements Listener {
             if (receiver != null ) {
                 UUID finalReceiver = receiver;
                 String finalContent = content;
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                    Client.getInstance().session("chat.send")
-                            .addArg("fromEid", sender.toString())
-                            .addArg("toEid", finalReceiver.toString())
-                            .addArg("message", finalContent)
-                            .capture((e) -> {
-                                logger.warning("chat message not forwarded: " + e.getMessage());
-                            })
-                            .send();
-                });
+                serverImpl.async().runNow(() -> Client.getInstance().session("chat.send")
+                        .addArg("fromEid", sender.toString())
+                        .addArg("toEid", finalReceiver.toString())
+                        .addArg("message", finalContent)
+                        .capture((e) -> {
+                            logger.warning("chat message not forwarded: " + e.getMessage());
+                        })
+                        .send());
             }
         }
     }

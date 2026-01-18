@@ -1,5 +1,6 @@
 package io.serverbench.client.spigot;
 
+import com.cjcrafter.foliascheduler.ServerImplementation;
 import com.vexsoftware.votifier.model.VotifierEvent;
 import io.serverbench.client.common.VoteManager;
 import org.bukkit.Bukkit;
@@ -11,15 +12,17 @@ import org.bukkit.plugin.Plugin;
 public class VoteListener implements Listener {
 
     Plugin plugin;
+    ServerImplementation serverImpl;
 
-    VoteListener(Plugin plugin) {
+    VoteListener(Plugin plugin, ServerImplementation serverImpl) {
         this.plugin = plugin;
         this.plugin.getLogger().info("created NuVotifier listener");
+        this.serverImpl = serverImpl;
     }
 
     @EventHandler
     public void onVote(VotifierEvent event) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> VoteManager.forwardVote(event.getVote())
+        serverImpl.async().runNow(() -> VoteManager.forwardVote(event.getVote())
             .then((e)-> plugin.getLogger().info("forwarded vote"))
             .capture((e)-> plugin.getLogger().warning("error while forwarding vote: " + e.getMessage()))
             .send());

@@ -1,9 +1,9 @@
 package io.serverbench.client.spigot;
 
+import com.cjcrafter.foliascheduler.ServerImplementation;
 import io.serverbench.client.common.ConnectionManager;
 import io.serverbench.client.common.IdleProvider;
 import io.serverbench.client.common.strayWorker.ConnectedMember;
-import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
@@ -18,11 +18,13 @@ public class ConnectionListener implements org.bukkit.event.Listener {
     Plugin plugin;
     @Nullable
     IdleProvider idleProvider;
+    ServerImplementation serverImpl;
 
-    ConnectionListener(boolean slave, Plugin plugin, @Nullable IdleProvider idleProvider) {
+    ConnectionListener(boolean slave, Plugin plugin, @Nullable IdleProvider idleProvider, ServerImplementation serverImpl) {
         this.slave = slave;
         this.plugin = plugin;
         this.idleProvider = idleProvider;
+        this.serverImpl = serverImpl;
     }
 
     @EventHandler
@@ -36,16 +38,14 @@ public class ConnectionListener implements org.bukkit.event.Listener {
     @EventHandler()
     public void onPlayerJoin(PlayerJoinEvent event) {
         if(slave) return;
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            ConnectionManager.getInstance().openConnection(
-                    event.getPlayer().getUniqueId(),
-                    event.getPlayer().getName(),
-                    "minecraft/java",
-                    null,
-                    event.getPlayer().getAddress(),
-                    idleProvider != null && idleProvider.isIdle(event.getPlayer().getUniqueId())
-            );
-        });
+        serverImpl.async().runNow(() -> ConnectionManager.getInstance().openConnection(
+                event.getPlayer().getUniqueId(),
+                event.getPlayer().getName(),
+                "minecraft/java",
+                null,
+                event.getPlayer().getAddress(),
+                idleProvider != null && idleProvider.isIdle(event.getPlayer().getUniqueId())
+        ));
     }
 
     @EventHandler()
@@ -53,13 +53,11 @@ public class ConnectionListener implements org.bukkit.event.Listener {
         ConnectedMember connectedMember = ConnectionManager.getInstance().getConnected().get(event.getPlayer().getUniqueId());
         if(connectedMember != null) {
             ConnectionManager.getInstance().unsetHostname(connectedMember.id());
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                ConnectionManager.getInstance().closeConnection(
-                        connectedMember.id(),
-                        connectedMember.name(),
-                        connectedMember.platform()
-                );
-            });
+            serverImpl.async().runNow(() -> ConnectionManager.getInstance().closeConnection(
+                    connectedMember.id(),
+                    connectedMember.name(),
+                    connectedMember.platform()
+            ));
         }
     }
 }

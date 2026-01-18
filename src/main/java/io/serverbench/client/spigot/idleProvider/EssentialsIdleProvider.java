@@ -1,5 +1,6 @@
 package io.serverbench.client.spigot.idleProvider;
 
+import com.cjcrafter.foliascheduler.ServerImplementation;
 import com.earth2me.essentials.Essentials;
 import io.serverbench.client.common.ConnectionManager;
 import io.serverbench.client.common.IdleProvider;
@@ -17,18 +18,20 @@ public class EssentialsIdleProvider extends IdleProvider implements Listener {
 
     private final Plugin plugin;
     private final Essentials ess;
+    private final ServerImplementation serverImpl;
 
-    public EssentialsIdleProvider(Plugin plugin, boolean slave, ProxyMessaging proxyMessaging) {
+    public EssentialsIdleProvider(Plugin plugin, boolean slave, ProxyMessaging proxyMessaging, ServerImplementation serverImpl) {
         super(slave, proxyMessaging);
         this.plugin = plugin;
         this.ess = (Essentials) plugin.getServer().getPluginManager().getPlugin("Essentials");
+        this.serverImpl = serverImpl;
     }
 
     @EventHandler
     public void onIdleChange(AfkStatusChangeEvent event) {
         Player player = event.getAffected().getBase();
         boolean idle = event.getValue();
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, ()-> setIdle(
+        serverImpl.async().runNow(() -> setIdle(
                 idle,
                 player.getUniqueId(),
                 player.getName(),

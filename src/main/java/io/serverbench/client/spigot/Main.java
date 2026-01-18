@@ -1,5 +1,7 @@
 package io.serverbench.client.spigot;
 
+import com.cjcrafter.foliascheduler.FoliaCompatibility;
+import com.cjcrafter.foliascheduler.ServerImplementation;
 import io.serverbench.client.common.ConnectionManager;
 import io.serverbench.client.common.IdleProvider;
 import io.serverbench.client.common.VoteManager;
@@ -7,7 +9,6 @@ import io.serverbench.client.lib.Client;
 import io.serverbench.client.lib.EventHandler;
 import io.serverbench.client.lib.NotReadyException;
 import io.serverbench.client.lib.obj.Command;
-import io.serverbench.client.lib.obj.vote.VoteDisplay;
 import io.serverbench.client.spigot.idleProvider.AfkPlusIdleProvider;
 import io.serverbench.client.spigot.idleProvider.EssentialsIdleProvider;
 import io.serverbench.client.spigot.placeholderProvider.PapiProvider;
@@ -34,12 +35,14 @@ public class Main extends JavaPlugin {
             messaging.register();
         }
 
+        ServerImplementation scheduler = new FoliaCompatibility(this).getServerImplementation();
+
         // idle providers
         IdleProvider idleProvider = null;
         if(hasPlugin("AFKPlus")){
-            idleProvider = new AfkPlusIdleProvider(this, isSlave, messaging);
+            idleProvider = new AfkPlusIdleProvider(this, isSlave, messaging, scheduler);
         } else if (hasPlugin("Essentials")){
-            idleProvider = new EssentialsIdleProvider(this, isSlave, messaging);
+            idleProvider = new EssentialsIdleProvider(this, isSlave, messaging, scheduler);
         }
         if(idleProvider!=null){
             idleProvider.register();
@@ -58,7 +61,8 @@ public class Main extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ConnectionListener(
                 isSlave,
                 this,
-                idleProvider
+                idleProvider,
+                scheduler
         ), this);
         StrayWorkerSpigot strayWorkerSpigot = new StrayWorkerSpigot(
                 isSlave,
@@ -67,15 +71,16 @@ public class Main extends JavaPlugin {
         );
         // chat events
         getServer().getPluginManager().registerEvents(new ChatListener(
-                this
+                this,
+                scheduler
         ), this);
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this, strayWorkerSpigot, 0, 20*5);
+        scheduler.async().runAtFixedRate(strayWorkerSpigot, 0, 20*5);
 
         // voting event input
         if(getServer().getPluginManager().getPlugin("Votifier")!=null){
-            getServer().getPluginManager().registerEvents(new VoteListener(this), this);
+            getServer().getPluginManager().registerEvents(new VoteListener(this, scheduler), this);
         }
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this, ()->{
+        scheduler.async().runAtFixedRate(() -> {
             try {
                 VoteManager.getInstance().requestCacheIfDue();
             } catch (NotReadyException e) {
@@ -87,21 +92,17 @@ public class Main extends JavaPlugin {
         if(getConfig().get("key") == null || getConfig().get("name") == null) {
             getLogger().severe("serverbench is not setup, please, specify 'key', 'name', and (optionally) 'instance' on plugins/serverbench/config.yml");
         } else {
-            Bukkit.getScheduler().runTaskAsynchronously(this, ()-> Client.initialize(
+            scheduler.async().runNow(() -> // the client reconnected, reconnect stray players
+                    Client.initialize(
                     Objects.requireNonNull(getConfig().getString("endpoint")),
                     new EventHandler(
-                            (cmds) -> Bukkit.getScheduler().runTask(this, () -> {
+                            (cmds) -> scheduler.global().run(() -> {
                                 for (Command cmd : cmds) {
                                     getServer().dispatchCommand(getServer().getConsoleSender(), cmd.cmd);
                                 }
                             }),
-                            (voters) -> {
-                                VoteManager.getInstance().refreshCache(voters);
-                            },
-                            () -> {
-                                // the client reconnected, reconnect stray players
-                                strayWorkerSpigot.run();
-                            },
+                            (voters) -> VoteManager.getInstance().refreshCache(voters),
+                            strayWorkerSpigot,
                             () -> {
                                 // the client disconnected, which means we should close all the active connections,
                                 // as they should have been closed by serverbench upon disconnecting the client
