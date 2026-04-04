@@ -64,8 +64,9 @@ public class Client {
     }
 
     public void close(){
-        if(ws.isOpen()){
-            expectClosed = true;
+        expectClosed = true;
+        reconnectScheduler.shutdownNow();
+        if(ws != null && ws.isOpen()){
             ws.close();
         }
     }
