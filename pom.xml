@@ -112,8 +112,8 @@
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
-            <version>3.1.0</version>
-            <scope>provided</scope>
+            <version>3.2.1</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.github.NuVotifier.NuVotifier</groupId>
@@ -143,6 +143,12 @@
             <groupId>com.cjcrafter</groupId>
             <artifactId>foliascheduler</artifactId>
             <version>0.7.5</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>26.1.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
