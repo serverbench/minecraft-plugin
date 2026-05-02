@@ -1,11 +1,10 @@
 {
   "id": "serverbench",
   "name": "serverbench-beta",
-  "version": "1.0.0",
+  "version": "${project.version}",
   "authors": ["serverbench"],
   "main": "io.serverbench.client.velocity.Main",
   "dependencies": [
     {"id": "nuvotifier", "optional": true}
   ]
 }
-

@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
-@Plugin(id = "serverbench", name = "serverbench-beta", version = "1.0.0", authors = {"serverbench"})
+@Plugin(id = "serverbench", name = "serverbench-beta", authors = {"serverbench"})
 public class Main {
 
     public static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from("serverbench:connection");
