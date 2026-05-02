@@ -1,0 +1,11 @@
+{
+  "id": "serverbench",
+  "name": "serverbench-beta",
+  "version": "1.0.0",
+  "authors": ["serverbench"],
+  "main": "io.serverbench.client.velocity.Main",
+  "dependencies": [
+    {"id": "nuvotifier", "optional": true}
+  ]
+}
+
